@@ -80,7 +80,6 @@ dev.off()
 ################################# TCGA Heatmap ################################# 
 ################################################################################
 
-
 # Load scaffold
 load(file="/home/people/s165827/data/Breast cancer classification/tcga_scaffold_v2.Rdata")
 
@@ -123,68 +122,81 @@ dev.off()
 # ggpubr::ggarrange(c(gtex_plot,  tcga_plot), nrow = 2,ncol=1, labels = c('A', 'B'))
 
 ################################################################################
-################################### TCGA DGE ################################### 
+################################### GTEX DGE ################################### 
 ################################################################################
 
 #### DE GENES - THE SLACK LARS WAY ####
+load(file="/home/people/s165827/data/Breast cancer classification/gtex.Rdata")
 
 library(genefilter) # You may need to load this library for the coef function
 
 # Create an empty dataframe to store log2fold changes
-log2fold_changes <- data.frame(row.names = rownames(tcga_scaffold))
+# log2fold_changes <- data.frame(row.names = rownames(tcga_scaffold))
+log2fold_changes <- data.frame(row.names = rownames(gtex_scaffold))
 
-labels <- colnames(tcga_scaffold)
+# labels <- colnames(tcga_scaffold)
+labels <- class_sample
 
-# Find top DE probes (TPD) 
+# Find top DE probes (TPD)
 groups <- list()
 for(i in unique(labels)) {
-  
-  
-  pvals <- apply(tcga_scaffold, 1, function(x) wilcox.test(x[labels == i], x[!labels == i])$p.value)
+
+  pvals <- apply(gtex_scaffold, 1, function(x) wilcox.test(x[labels == i], x[!labels == i])$p.value)
   pvals <- p.adjust(pvals)
-  
+
   # Calculate log2fold changes and filter
-  for (j in 1:ncol(tcga_scaffold)) {
-    group1 <- tcga_scaffold[labels == i, j]  # Expression values for group i
-    group2 <- tcga_scaffold[labels != i, j]  # Expression values for other groups
-    
+  for (j in 1:ncol(gtex_scaffold)) {
+    group1 <- gtex_scaffold[labels == i, j]  # Expression values for group i
+    group2 <- gtex_scaffold[labels != i, j]  # Expression values for other groups
+
     # Calculate log2fold change using the mean expression values
     log2fold_change <- log2(mean(group1, na.rm = TRUE)) - log2(mean(group2, na.rm = TRUE))
-    
+
     # Store the log2fold change in the dataframe
     log2fold_changes[j, i] <- log2fold_change
 
   }
-  
+
   # Append significant features based on adjusted p-values and log2fold changes
   significant_indices <- which(abs(log2fold_changes[, i]) > 0.2 & pvals < 0.05)
-  # features <- append(features, as.vector(na.omit(names(pvals)[significant_indices])))
+  # significant_indices <- which(pvals < 0.05)
+  # top_10_significant_indices <- sort(pvals)[1:20]
+  # groups[[i]] <- append(groups, as.vector(na.omit(names(pvals)[significant_indices])))
   groups[[i]] <- c(na.omit(names(pvals)[significant_indices]))
+  # groups[[i]] <- names(top_10_significant_indices)
 
 }
 
-TPD <- unique(features)
-tcga_scaffold_TPD <- tcga_scaffold[rownames(tcga_scaffold) %in% TPD, ]
-saveRDS(tcga_scaffold_TPD, 'rds/tcga_scaffold_TPD.rds')
+# TPD <- unique(features)
+# tcga_scaffold_TPD <- tcga_scaffold[rownames(tcga_scaffold) %in% TPD, ]
+# saveRDS(groups, 'rds/tcga_groups.rds')
+# saveRDS(groups, 'rds/gtex_groups.rds')
+# groups_tcga <- readRDS('rds/tcga_groups.rds')
+groups_gtex <- readRDS('rds/gtex_groups.rds')
+groups_gtex <- groups
 
-pca <- prcomp(t(tcga_scaffold_TPD), scale. = TRUE)
+# pca <- prcomp(t(tcga_scaffold_TPD), scale. = TRUE)
 
 # De normaliserede ekspressionsværdier udregnes således:
-tcga_scaffold_TPD_scaled <- NULL
-for(i in 1:length(groups)) {
-  pca <- prcomp(tcga_scaffold_TPD[groups[[i]],], scale. = TRUE)
-  tcga_scaffold_TPD_scaled <- rbind(tcga_scaffold_TPD_scaled, as.matrix(tcga_scaffold_TPD[groups[[i]],]/pca$sdev[1]^2))
+gtex_scaffold_TPD_scaled <- NULL
+for(i in 1:length(groups_gtex)) {
+  pca <- prcomp(t(gtex_scaffold[groups_gtex[[i]],]), scale. = TRUE)
+  gtex_scaffold_TPD_scaled <- rbind(gtex_scaffold_TPD_scaled, as.matrix(gtex_scaffold[groups_gtex[[i]],]/pca$sdev[1]^2))
 }
-tcga_scaffold_TPD_scaled
+gtex_scaffold_TPD_scaled
+
+# saveRDS(tcga_scaffold_TPD_scaled, 'rds/tcga_scaffold_TPD_scaled.rds')
+saveRDS(gtex_scaffold_TPD_scaled, 'rds/gtex_scaffold_TPD_scaled.rds')
 
 # Rank??
-# tcga_scaffold_TPD_rank <- apply(tcga_scaffold_TPD, 2, rank)
+gtex_scaffold_TPD_scaled_rank <- apply(gtex_scaffold_TPD_scaled, 2, rank)
+# gtex_scaffold_TPD_scaled_rank <- gtex_scaffold_TPD_scaled
 
 # PCA of tcga_scaffold_TPD_rank
-pca <- prcomp(t(tcga_scaffold_TPD_scaled), scale. = TRUE)
+pca <- prcomp(t(gtex_scaffold_TPD_scaled_rank), scale. = TRUE)
 # pca_new <- scale(t(Bordet_RNA_core), pca$center, pca$scale) %*% pca$rotation
 # df <- data.frame(PC1 = c(pca$x[,1], pca_new[,1]), PC2 = c(pca$x[,2], pca_new[,2]), source=c(rep("CITBCMST reference", ncol(CIT_full)), rep("Example data", ncol(Bordet_RNA_core))), sample=c(rep(NA,  ncol(CIT_full)), colnames(Bordet_RNA_core)))
-df <- data.frame(PC1 = c(pca$x[,1]), PC2 = c(pca$x[,2]), tissue = colnames(tcga_scaffold_TPD_rank))
+df <- data.frame(PC1 = c(pca$x[,1]), PC2 = c(pca$x[,2]), tissue = class_sample)
 var_exp <- summary(pca)$importance[2,1:2] * 100
 
 # Plot
@@ -196,27 +208,29 @@ ggplot(df, aes(x = PC1,
   # ggrepel::geom_label_repel(size=1.75, show.legend = FALSE, alpha = 0.8, fontface = 'bold') +
   xlab(paste0('PC1 (', format(round(var_exp[1], 1), nsmall = 1), '% variance explained)')) + 
   ylab(paste0('PC2 (', format(round(var_exp[2], 1), nsmall = 1), '% variance explained)')) +
-  theme_bw() +
-  theme(legend.position = "none")
+  theme_bw() 
+  # theme(legend.position = "none")
 
 ################################################################################
 ################################ TCGA centroids ################################ 
 ################################################################################
 
-nc_pred <- c()
-for(i in 1:ncol(tcga_scaffold_TPD_rank)) {
-  centroid_distances <- c()
-  for(ii in 1:length(centroids)) {
-    # centroid_distances <- c(centroid_distances, dist(rbind(CIT_TPD_rank[,i], centroids[[ii]])))
-    centroid_distances <- c(centroid_distances, DistancePair(tcga_scaffold_TPD_rank[,i], centroids[[ii]]))
-  }
-  names(centroid_distances) <- names(centroids)
-  nc_pred <- c(nc_pred, names(which.min(centroid_distances)))
-}
-
 # # Simple spearman correlation to centroid (based on mean)
-# centroids <- do.call(cbind, lapply(unique(colnames(tcga_scaffold)), function(c) {rowMeans(tcga_scaffold[,colnames(tcga_scaffold)==c])}))
-# colnames(centroids) <- unique(colnames(tcga_scaffold))
+centroids <- do.call(cbind, lapply(unique(colnames(tcga_scaffold_TPD_scaled_rank)), function(c) {rowMeans(tcga_scaffold_TPD_scaled_rank[,colnames(tcga_scaffold_TPD_scaled_rank)==c])}))
+colnames(centroids) <- unique(colnames(tcga_scaffold_TPD_scaled))
+
+# nc_pred <- c()
+# for(i in 1:ncol(tcga_scaffold_TPD_scaled)) {
+#   centroid_distances <- c()
+#   for(ii in 1:length(centroids)) {
+#     # centroid_distances <- c(centroid_distances, dist(rbind(CIT_TPD_rank[,i], centroids[[ii]])))
+#     centroid_distances <- c(centroid_distances, DistancePair(tcga_scaffold_TPD_scaled[,i], centroids[[ii]]))
+#   }
+#   names(centroid_distances) <- names(centroids)
+#   nc_pred <- c(nc_pred, names(which.min(centroid_distances)))
+# }
+
+
 
 
 
