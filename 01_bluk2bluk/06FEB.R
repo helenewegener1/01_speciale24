@@ -20,7 +20,7 @@ gtex_top10_samples_pheno <- gtex_top10_samples[[2]]
 
 # for (n_genes in c(1200, 1700, 2000)){
   
-n_genes = 1000
+n_genes = 500
 gtex_Scaffold_baseline <- buildScaffold(gtex_scaffold, 
                                         pheno = gtex_pheno,
                                         colname = 'class_sample',
@@ -45,14 +45,13 @@ ggsave(glue('plots_FEB06/{n_genes}genes_baseline_dim13.png'), width = 10, height
 #               dims = c(2,3)) + theme(legend.position = "none")
 # ggsave(glue('plots_FEB06/Breast_projected_{n_genes}genes_baseline_dim23.png'), width = 10, height = 8.72)
 
-n_genes = 1000
 gtex_top10_samples_Scaffold <- buildScaffold(gtex_top10_samples_scaffold, 
                                              pheno = gtex_top10_samples_pheno,
                                              colname = 'class_sample',
                                              data = 'exprs', 
                                              subset_deg = TRUE,
                                              threshold = 10,
-                                             add_umap = TRUE,
+                                             # add_umap = TRUE,
                                              pca_scale = TRUE,
                                              n_genes = n_genes)
 
