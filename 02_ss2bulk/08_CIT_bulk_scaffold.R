@@ -151,3 +151,52 @@ table(core_genes %in% best_scaffold_genes)
 saveRDS(best_scaffold, '02_ss2bulk/rds/CIT_best_scaffold.rds')
 
 
+#####################################################################
+##################### Best scaffold - remove samples ################ 
+#####################################################################
+
+samples_subset <- c('CIT_DSOA_034', 'CIT_DSOA_033', 'CIT_DSOA_035', 'CIT_DSOA_031', 'CIT_DSOA_535', 'CIT_DSOA_028')
+# Expr
+CIT_full_fl_genesymbol_remove_samples <- CIT_full_fl_genesymbol[, !colnames(CIT_full_fl_genesymbol) %in% samples_subset]
+# Pheno
+CIT_classes_df_remove_samples <- CIT_classes_df[!rownames(CIT_classes_df) %in% samples_subset ,]
+CIT_classes_df_remove_samples <- as.data.frame(CIT_classes_df_remove_samples)
+rownames(CIT_classes_df_remove_samples) <- colnames(CIT_full_fl_genesymbol_remove_samples)
+colnames(CIT_classes_df_remove_samples) <- c('CIT_classes')
+  
+subset_deg = TRUE
+pval_cutoff <- 0.05
+lfc_cutoff <- 1.5
+n_genes <- 250
+sort.by <- 'B'
+
+best_scaffold_remove_samples <- buildScaffold(object = CIT_full_fl_genesymbol_remove_samples, 
+                                              pheno = CIT_classes_df_remove_samples,
+                                              colname = "CIT_classes",
+                                              data = "exprs",
+                                              annotation = NULL,
+                                              pca_scale = TRUE,
+                                              subset_deg = subset_deg, 
+                                              pval_cutoff = pval_cutoff, 
+                                              lfc_cutoff = lfc_cutoff, 
+                                              n_genes = n_genes,
+                                              sort.by = sort.by
+)
+
+############# Project ############# 
+# Pheno
+project_samples_pheno <- CIT_classes_df[samples_subset ,]
+project_samples_pheno <- as.data.frame(project_samples_pheno)
+rownames(project_samples_pheno) <- samples_subset
+
+# Expression
+project_samples_expr <- CIT_full_fl_genesymbol[, samples_subset]
+
+projectSample(scaffold = best_scaffold_remove_samples, 
+              sample = project_samples_expr,
+              pheno = project_samples_pheno,
+              colname = 'project_samples_pheno',
+              annotation = NULL,
+              title = 'CIT samples projected to CIT scaffold')
+
+

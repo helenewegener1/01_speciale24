@@ -40,6 +40,7 @@ projectSample(scaffold = best_scaffold,
               sample = project_samples_expr,
               pheno = project_samples_pheno,
               colname = 'project_samples_pheno', 
+              annotation = NULL,
               title = 'PAM50 samples projected to PAM50 scaffold')
 
 ggsave('02_ss2bulk/plots/09_PAM50_project_PAM50_samples_to_PAM50_scaffold.png')
@@ -55,6 +56,7 @@ projectSample(scaffold = best_scaffold,
               sample = CIT_project_samples_expr,
               pheno = CIT_project_samples_pheno,
               colname = 'project_samples_pheno', 
+              annotation = NULL,
               title = 'CIT samples projected to PAM50 scaffold')
 
 ggsave('02_ss2bulk/plots/09_PAM50_project_CIT_samples_to_PAM50_scaffold.png')

@@ -116,3 +116,9 @@ table(pam50_genes %in% best_scaffold_genes)
 
 saveRDS(best_scaffold, '02_ss2bulk/rds/PAM50_best_scaffold.rds')
 
+# plotScaffold(best_scaffold, 
+#              title = glue("PAM50 Scaffold, pval_cutoff = 0.05, lfc_cutoff = 1.5, n_genes = 20, sort.by = B"),
+#              dims = c(2,3)) + theme(legend.position = 'none')
+# 
+# ggsave('02_ss2bulk/plots/09_PAM50_best_scaffold_dim23.png')
+ 

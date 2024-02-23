@@ -36,6 +36,7 @@ projectSample(scaffold = best_scaffold,
               sample = project_samples_expr,
               pheno = project_samples_pheno,
               colname = 'project_samples_pheno',
+              annotation = NULL,
               title = 'CIT samples projected to CIT scaffold')
 
 ggsave('02_ss2bulk/plots/08_CIT_project_CIT_samples_to_CIT_scaffold.png')
@@ -51,6 +52,7 @@ projectSample(scaffold = best_scaffold,
               sample = PAM50_project_samples_expr,
               pheno = PAM50_project_samples_pheno,
               colname = 'project_samples_pheno',
+              annotation = NULL,
               title = 'PAM50 samples projected to CIT scaffold')
 
 ggsave('02_ss2bulk/plots/08_CIT_project_PAM50_samples_to_CIT_scaffold.png')
